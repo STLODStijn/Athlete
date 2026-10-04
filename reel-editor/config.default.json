@@ -1,7 +1,7 @@
 {
   "_uitleg": "Kopie hiervan komt in elke job-map (jobs/<naam>/config.json). Pas daar per video aan. Alle stijlwaarden zijn PLACEHOLDERS tot Stijn zijn huisstijl invult.",
 
-  "whisper_model": "small",
+  "whisper_model": "medium",
   "language": "nl",
 
   "keep_silence": false,
