@@ -1,0 +1,62 @@
+{
+  "_uitleg": "Kopie hiervan komt in elke job-map (jobs/<naam>/config.json). Pas daar per video aan. Alle stijlwaarden zijn PLACEHOLDERS tot Stijn zijn huisstijl invult.",
+
+  "whisper_model": "small",
+  "language": "nl",
+
+  "keep_silence": false,
+  "cut_stumbles": true,
+
+  "silence": {
+    "min_gap": 0.6,
+    "keep_pause": 0.25,
+    "noise_db": -35,
+    "trim_edges": true,
+    "edge_keep": 0.1
+  },
+  "stumbles": {
+    "fillers": ["euh", "uh", "eh", "ehm", "uhm", "hmm", "ehh", "euhm"],
+    "remove_repeats": true,
+    "repeat_max_words": 3
+  },
+
+  "caption_mode": "sentence",
+  "title": "",
+  "title_seconds": null,
+  "cta": "",
+  "cta_seconds": 3.0,
+
+  "terms": [],
+  "spelling": {},
+
+  "paths": {
+    "output_dir": ""
+  },
+
+  "output": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "crf": 18,
+    "preset": "medium",
+    "crop_x": 0.5
+  },
+
+  "style": {
+    "font": "Arial",
+    "fonts_dir": "assets/fonts",
+    "caption": {
+      "y": 0.70, "size": 68, "bold": true, "uppercase": false,
+      "color": "#FFFFFF", "outline_color": "#000000", "outline": 6, "shadow": 0,
+      "max_chars_per_line": 22, "max_chars_per_caption": 70, "hold": 0.12
+    },
+    "title": {
+      "y": 0.12, "size": 76, "bold": true, "uppercase": false,
+      "color": "#FFFFFF", "outline_color": "#000000", "outline": 6, "shadow": 0
+    },
+    "cta": {
+      "y": 0.50, "size": 72, "bold": true, "uppercase": false,
+      "color": "#FFD400", "outline_color": "#000000", "outline": 6, "shadow": 0
+    }
+  }
+}

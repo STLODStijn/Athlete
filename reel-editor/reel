@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Launcher: gebruikt de venv uit setup.sh
+DIR="$(cd "$(dirname "$0")" && pwd)"
+PY="$DIR/.venv/bin/python"; [ -x "$PY" ] || PY=python3
+cd "$DIR" && exec "$PY" -c "import sys; sys.path.insert(0,'$DIR'); from reel_editor.cli import main; main()" "$@"
