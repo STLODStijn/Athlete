@@ -43,20 +43,20 @@
   },
 
   "style": {
-    "font": "Arial",
+    "font": "Maven Pro",
     "fonts_dir": "assets/fonts",
     "caption": {
-      "y": 0.70, "size": 68, "bold": true, "uppercase": false,
-      "color": "#FFFFFF", "outline_color": "#000000", "outline": 6, "shadow": 0,
+      "y": 0.70, "size": 50, "bold": true, "uppercase": false, "capitalize": true,
+      "color": "#FFFFFF", "outline_color": "#0B3D91", "outline": 4, "shadow": 0,
       "max_chars_per_line": 22, "max_chars_per_caption": 70, "hold": 0.12
     },
     "title": {
-      "y": 0.12, "size": 76, "bold": true, "uppercase": false,
-      "color": "#FFFFFF", "outline_color": "#000000", "outline": 6, "shadow": 0
+      "y": 0.12, "size": 64, "bold": true, "uppercase": false, "capitalize": true,
+      "color": "#FFFFFF", "outline_color": "#0B3D91", "outline": 5, "shadow": 0
     },
     "cta": {
-      "y": 0.50, "size": 72, "bold": true, "uppercase": false,
-      "color": "#FFD400", "outline_color": "#000000", "outline": 6, "shadow": 0
+      "y": 0.50, "size": 58, "bold": true, "uppercase": false, "capitalize": true,
+      "color": "#FFFFFF", "outline_color": "#0B3D91", "outline": 5, "shadow": 0
     }
   }
 }

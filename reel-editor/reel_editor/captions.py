@@ -71,10 +71,24 @@ def _finish(groups, style, total, joiner):
     return ev
 
 
+def capitalize_sentences(words):
+    """Eerste woord van elke zin krijgt een hoofdletter (ook als de zin begon met een weggeknipt tussenwoord)."""
+    out, start = [], True
+    for w in words:
+        t = w["text"]
+        if start and t:
+            t = t[0].upper() + t[1:]
+        out.append(dict(w, text=t))
+        start = t.endswith((".", "?", "!", "…"))
+    return out
+
+
 def build_events(words, cfg, total):
     """Geeft lijst van {kind,start,end,text}."""
     st = cfg["style"]
     mode = cfg["caption_mode"]
+    if st["caption"].get("capitalize"):
+        words = capitalize_sentences(words)
     events = []
     if mode == "sentence":
         events += [dict(e, kind="caption") for e in sentence_events(words, st["caption"], total)]
