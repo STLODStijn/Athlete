@@ -25,7 +25,7 @@ def deep_merge(base, over):
 
 
 def run(cmd, cwd=None, check=True):
-    r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True)
+    r = subprocess.run(cmd, cwd=cwd, capture_output=True, text=True, stdin=subprocess.DEVNULL)
     if check and r.returncode != 0:
         sys.exit(f"Commando mislukt: {' '.join(map(str, cmd))}\n{r.stderr[-1500:]}")
     return r

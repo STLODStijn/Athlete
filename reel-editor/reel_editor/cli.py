@@ -1,4 +1,4 @@
-import argparse, shutil, sys, time
+import argparse, platform, shutil, subprocess, sys, time
 from pathlib import Path
 from .util import ROOT, load_json, save_json, deep_merge, duration, sha, run
 from . import transcribe as tr, cuts as cu, render as rd, verify as vf
@@ -122,6 +122,99 @@ def cmd_verify(a):
         sys.exit(1)
 
 
+def cmd_report(a):
+    """Verzamelt alles wat Claude nodig heeft in één tekst en kopieert die naar het klembord (macOS)."""
+    d = job_paths(a.job)
+    cfg = load_cfg(d)
+    ver = run(["ffmpeg", "-version"], check=False).stdout.splitlines()[:1]
+    parts = [f"REEL-EDITOR RAPPORT job={a.job}", f"ffmpeg: {ver[0] if ver else '?'}", f"platform: {platform.platform()}"]
+
+    def add(title, p, limit=6000):
+        p = d / p
+        parts.append(f"\n--- {title} ---")
+        parts.append(p.read_text(encoding="utf-8")[:limit] if p.exists() else "(ontbreekt)")
+
+    add("timings.json", "timings.json")
+    add("config.json (jouw instellingen)", "config.json")
+    add("transcript.txt", "transcript.txt")
+    cuts = load_json(d / "cuts.json")["cuts"] if (d / "cuts.json").exists() else []
+    parts.append("\n--- knipplan ---")
+    parts += [f"{c['kind']:8} {c['start']:7.2f}-{c['end']:7.2f} {'aan ' if c.get('enabled', True) else 'UIT '}{c['reason']}" for c in cuts] or ["(geen)"]
+    add("verify.txt", "verify.txt")
+    text = "\n".join(parts) + "\n"
+    (d / "report.txt").write_text(text, encoding="utf-8")
+    if shutil.which("pbcopy"):
+        subprocess.run(["pbcopy"], input=text.encode("utf-8"))
+        print(f"Rapport gekopieerd naar je klembord ({len(text)} tekens). Plak het in je gesprek met Claude (Cmd+V).")
+    else:
+        print(f"Rapport opgeslagen in {d / 'report.txt'} (geen pbcopy gevonden).")
+
+
+def ask(prompt):
+    try:
+        return input(prompt).strip()
+    except EOFError:
+        return "q"
+
+
+def cmd_go(a):
+    """Eén commando: transcriberen -> review -> (spelling/titel/CTA aanpassen) -> goedkeuren -> renderen -> controle."""
+    src = Path(a.video).expanduser().resolve()
+    name = a.name or src.stem
+    d = JOBS / name
+    have = (d / "transcript.raw.json").exists() and (d / "job.json").exists() and not a.again
+    if have:
+        print(f"Bestaande transcriptie van '{name}' hergebruikt (--again om opnieuw te transcriberen).")
+        save_json(d / "job.json", {"source": str(src)})
+        if not (d / "audio.wav").exists():
+            tr.extract_audio(src, d / "audio.wav")
+        cmd_plan(argparse.Namespace(job=name))
+    else:
+        cmd_transcribe(argparse.Namespace(video=str(src), name=name, model=None))
+
+    def setcfg(**kv):
+        c = load_json(d / "config.json")
+        c.update(kv)
+        save_json(d / "config.json", c)
+
+    if a.title is not None:
+        setcfg(title=a.title)
+    if a.cta is not None:
+        setcfg(cta=a.cta)
+    while True:
+        cmd_review(argparse.Namespace(job=name))
+        cfgnow = load_cfg(d)
+        print(f"\nTitel: {cfgnow['title'] or '(geen)'} · CTA: {cfgnow['cta'] or '(geen)'} · Captions: {cfgnow['caption_mode']}")
+        ans = ask("\n[Enter] goedkeuren en renderen · f = spelling fixen · t = titel · c = CTA · m = captionmodus · q = stoppen\n> ")
+        if ans == "":
+            break
+        if ans == "q":
+            print("Gestopt. Hervat later met dezelfde opdracht (transcriptie wordt hergebruikt).")
+            return
+        if ans == "f":
+            w, r = ask("Fout geschreven als: "), ask("Moet zijn: ")
+            if w and r:
+                cmd_fix(argparse.Namespace(job=name, wrong=w, right=r))
+        elif ans == "t":
+            setcfg(title=ask("Titel (leeg = geen): "))
+        elif ans == "c":
+            setcfg(cta=ask("CTA (leeg = geen): "))
+        elif ans == "m":
+            m = ask("none / sentence / word: ")
+            if m in ("none", "sentence", "word"):
+                setcfg(caption_mode=m)
+    cmd_approve(argparse.Namespace(job=name))
+    cmd_render(argparse.Namespace(job=name, yes=False))
+    try:
+        cmd_verify(argparse.Namespace(job=name, deep=a.deep))
+    except SystemExit:
+        print("Let op: controle meldde een FAIL, zie hierboven.")
+    cmd_report(argparse.Namespace(job=name))
+    out = load_json(d / "render_info.json")["out"]
+    if shutil.which("open"):
+        subprocess.run(["open", out])
+
+
 def main():
     p = argparse.ArgumentParser(prog="reel")
     s = p.add_subparsers(dest="cmd", required=True)
@@ -134,5 +227,10 @@ def main():
         help="sla goedkeuring over (alleen voor tests)"); x.set_defaults(f=cmd_render)
     x = s.add_parser("verify"); x.add_argument("job"); x.add_argument("--deep", action="store_true",
         help="transcribeer de uitvoer opnieuw en vergelijk captions met de audio (traag)"); x.set_defaults(f=cmd_verify)
+    x = s.add_parser("report"); x.add_argument("job"); x.set_defaults(f=cmd_report)
+    x = s.add_parser("go", help="alles in één keer, met vragen onderweg")
+    x.add_argument("video"); x.add_argument("--name"); x.add_argument("--title"); x.add_argument("--cta")
+    x.add_argument("--again", action="store_true", help="transcribeer opnieuw"); x.add_argument("--deep", action="store_true")
+    x.set_defaults(f=cmd_go)
     a = p.parse_args()
     a.f(a)

@@ -6,7 +6,13 @@ Lokale pipeline: ruwe talking-head video -> bewerkte 9:16 reel. Alles draait op 
     ./setup.sh        # ffmpeg via Homebrew + Python venv + faster-whisper
 Het Whisper-model wordt bij de eerste transcriptie eenmalig gedownload (enige netwerkverkeer).
 
-## Werkwijze
+## Snelste weg (aanbevolen)
+    ./reel go ~/reels/raw/video.MOV --name mijnreel --title "Titel" --cta "Reageer met het woord ebook"
+Eén commando: transcribeert, toont het transcript, laat je spelling/titel/CTA/captionmodus aanpassen,
+vraagt goedkeuring, rendert, controleert, opent de reel en kopieert een rapport naar je klembord.
+    ./reel report mijnreel      # kopieert alles wat Claude nodig heeft naar het klembord (macOS)
+
+## Werkwijze (losse stappen)
     ./reel transcribe ~/pad/video.mov --name mijnreel   # transcript + voorstel knipplan
     ./reel review mijnreel                               # lees transcript, ⟦stumbles⟧ en stiltes
     ./reel fix mijnreel "bionde" "Beyond"                # spelling corrigeren (herberekent plan)
