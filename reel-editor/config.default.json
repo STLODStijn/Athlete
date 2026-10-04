@@ -47,9 +47,9 @@
     "font": "Maven Pro",
     "fonts_dir": "assets/fonts",
     "caption": {
-      "y": 0.66,
+      "y": 0.68,
       "size": 50,
-      "bold": true,
+      "bold": false,
       "uppercase": false,
       "capitalize": true,
       "color": "#FFFFFF",
@@ -58,7 +58,8 @@
       "shadow": 0,
       "max_chars_per_line": 22,
       "max_chars_per_caption": 70,
-      "hold": 0.12
+      "hold": 0.12,
+      "font": "Maven Pro Medium"
     },
     "title": {
       "y": 0.2,
@@ -71,12 +72,14 @@
       "outline": 5,
       "shadow": 0,
       "box_color": "#FFFFFF",
-      "box_padding": 18
+      "box_padding": 18,
+      "font": "Maven Pro",
+      "max_chars_per_line": 28
     },
     "cta": {
       "y": 0.78,
       "size": 58,
-      "bold": true,
+      "bold": false,
       "uppercase": false,
       "capitalize": true,
       "color": "#FFFFFF",
@@ -84,7 +87,9 @@
       "outline": 5,
       "shadow": 0,
       "box_color": "#123c69",
-      "box_padding": 18
+      "box_padding": 18,
+      "font": "Maven Pro Medium",
+      "max_chars_per_line": 30
     }
   }
 }

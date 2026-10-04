@@ -123,7 +123,7 @@ def write_ass(events, cfg, path):
         else:
             bstyle = 1
         lines.append(
-            f"Style: {name},{st['font']},{s['size']},{_ass_color(s['color'])},&H000000FF,"
+            f"Style: {name},{s.get('font', st['font'])},{s['size']},{_ass_color(s['color'])},&H000000FF,"
             f"{_ass_color(s['outline_color'])},&H00000000,{-1 if s['bold'] else 0},0,0,0,100,100,0,0,{bstyle},"
             f"{s['outline']},{s['shadow']},5,60,60,0,1")
     lines += ["", "[Events]", "Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text"]
