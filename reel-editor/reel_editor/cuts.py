@@ -139,7 +139,7 @@ def describe(words, cuts):
     stumble = [c for c in cuts if c["kind"] == "stumble" and c.get("enabled", True)]
     sil = [c for c in cuts if c["kind"] in ("silence", "edge") and c.get("enabled", True)]
     marks = sorted([(w["start"], "w", w) for w in words] +
-                   [(c["start"], "s", c) for c in sil])
+                   [(c["start"], "s", c) for c in sil], key=lambda m: (m[0], m[1]))
     start_t = None
     for t, kind, obj in marks:
         if start_t is None:
