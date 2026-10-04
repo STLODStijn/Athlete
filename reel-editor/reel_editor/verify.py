@@ -66,26 +66,38 @@ def verify(job_dir, out_path, info, cfg, deep=False, whisper_fn=None):
                 f"{len(left)} stiltes langer dan {cfg['silence']['min_gap'] + 0.3:.1f}s over")
 
     if deep and caps and whisper_fn:
-        spoken = whisper_fn(out_path)["words"]
-        a_words = [(norm(w["text"]), w["start"]) for w in spoken if norm(w["text"])]
-        c_words = []
+        spoken = [w for w in whisper_fn(out_path)["words"] if norm(w["text"])]
+        s_tok = [norm(w["text"]) for w in spoken]
+        c_tok, c_meta = [], []  # per captionwoord: (caption, is_eerste_woord)
         for c in caps:
             toks = [t for t in c["text"].split() if norm(t)]
             for k, t in enumerate(toks):
-                c_words.append((norm(t), c["start"] + (c["end"] - c["start"]) * k / max(len(toks), 1)))
-        sm = difflib.SequenceMatcher(None, [w for w, _ in a_words], [w for w, _ in c_words], autojunk=False)
-        offs = []
+                c_tok.append(norm(t))
+                c_meta.append((c, k == 0))
+        sm = difflib.SequenceMatcher(None, s_tok, c_tok, autojunk=False)
+        diffs = []
+        for op, i1, i2, j1, j2 in sm.get_opcodes():
+            if op != "equal":
+                diffs.append(f"gesproken '{' '.join(s_tok[i1:i2])}' vs caption '{' '.join(c_tok[j1:j2])}'")
+        add("PASS" if sm.ratio() > 0.9 else "WARN", "captiontekst vs gesproken tekst (diep)",
+            f"{sm.ratio() * 100:.0f}% overeenkomst. Verschillen: " + ("; ".join(diffs[:8]) or "geen") +
+            ". Let op: Whisper schrijft bij een tweede pass soms anders; dit is geen bewijs van fout in de caption.")
+        # timing: caption moet verschijnen rond het eerste woord van de caption (zin- of woordmodus)
+        starts = []
         for blk in sm.get_matching_blocks():
             for k in range(blk.size):
-                offs.append(c_words[blk.b + k][1] - a_words[blk.a + k][1])
-        ratio = sm.ratio()
-        add("PASS" if ratio > 0.9 else "WARN", "captiontekst vs gesproken tekst (diep)",
-            f"{ratio * 100:.0f}% overeenkomst, {len(offs)} woorden gematcht")
-        if offs:
-            med = statistics.median(offs)
-            p90 = sorted(abs(x - med) for x in offs)[int(0.9 * (len(offs) - 1))]
-            add("PASS" if abs(med) < 0.25 and p90 < 0.5 else "WARN", "caption-timing (diep)",
-                f"mediane afwijking {med * 1000:+.0f} ms, p90 spreiding {p90 * 1000:.0f} ms")
+                c, first = c_meta[blk.b + k]
+                if first:
+                    starts.append((c["start"] - spoken[blk.a + k]["start"], c))
+        if starts:
+            offs = [o for o, _ in starts]
+            worst = max(offs, key=abs)
+            ok = abs(statistics.median(offs)) < 0.25 and abs(worst) < 0.5
+            add("PASS" if ok else "WARN", "caption-start vs eerste woord (diep)",
+                f"{len(starts)}/{len(caps)} captions gecontroleerd, mediaan {statistics.median(offs) * 1000:+.0f} ms, "
+                f"slechtste {worst * 1000:+.0f} ms (negatief = caption eerder dan woord)")
+        else:
+            add("WARN", "caption-start vs eerste woord (diep)", "geen enkel eerste woord kon gematcht worden")
     elif deep:
         add("WARN", "diep", "geen Whisper beschikbaar")
 
