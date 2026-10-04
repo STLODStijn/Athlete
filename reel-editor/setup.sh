@@ -4,7 +4,8 @@ set -euo pipefail
 cd "$(dirname "$0")"
 command -v brew >/dev/null || { echo "Homebrew ontbreekt: https://brew.sh"; exit 1; }
 command -v ffmpeg >/dev/null || { echo "ffmpeg installeren via Homebrew..."; brew install ffmpeg; }
-ffmpeg -hide_banner -filters 2>/dev/null | grep -q " subtitles " || { echo "Jouw ffmpeg mist libass (subtitles-filter). Herinstalleer: brew reinstall ffmpeg"; exit 1; }
+FILTERS="$(ffmpeg -hide_banner -filters 2>/dev/null || true)"
+echo "$FILTERS" | grep -Eq " subtitles " || { echo "Jouw ffmpeg mist libass (subtitles-filter). Oplossing: brew uninstall ffmpeg && brew install ffmpeg-full"; exit 1; }
 python3 -m venv .venv
 .venv/bin/pip install -q --upgrade pip faster-whisper
 echo "Klaar. Het Whisper-model wordt bij de eerste transcriptie eenmalig gedownload."
