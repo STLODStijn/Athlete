@@ -1,12 +1,9 @@
 {
   "_uitleg": "Kopie hiervan komt in elke job-map (jobs/<naam>/config.json). Pas daar per video aan. Alle stijlwaarden zijn PLACEHOLDERS tot Stijn zijn huisstijl invult.",
-
   "whisper_model": "medium",
   "language": "nl",
-
   "keep_silence": false,
   "cut_stumbles": true,
-
   "silence": {
     "min_gap": 0.6,
     "keep_pause": 0.25,
@@ -15,24 +12,29 @@
     "edge_keep": 0.1
   },
   "stumbles": {
-    "fillers": ["euh", "uh", "eh", "ehm", "uhm", "hmm", "ehh", "euhm"],
+    "fillers": [
+      "euh",
+      "uh",
+      "eh",
+      "ehm",
+      "uhm",
+      "hmm",
+      "ehh",
+      "euhm"
+    ],
     "remove_repeats": true,
     "repeat_max_words": 3
   },
-
   "caption_mode": "sentence",
   "title": "",
   "title_seconds": null,
   "cta": "",
   "cta_seconds": 3.0,
-
   "terms": [],
   "spelling": {},
-
   "paths": {
     "output_dir": "~/reels/out"
   },
-
   "output": {
     "width": 1080,
     "height": 1920,
@@ -41,23 +43,48 @@
     "preset": "medium",
     "crop_x": 0.5
   },
-
   "style": {
     "font": "Maven Pro",
     "fonts_dir": "assets/fonts",
     "caption": {
-      "y": 0.70, "size": 50, "bold": true, "uppercase": false, "capitalize": true,
-      "color": "#FFFFFF", "outline_color": "#000000", "outline": 4, "shadow": 0,
-      "max_chars_per_line": 22, "max_chars_per_caption": 70, "hold": 0.12
+      "y": 0.66,
+      "size": 50,
+      "bold": true,
+      "uppercase": false,
+      "capitalize": true,
+      "color": "#FFFFFF",
+      "outline_color": "#000000",
+      "outline": 4,
+      "shadow": 0,
+      "max_chars_per_line": 22,
+      "max_chars_per_caption": 70,
+      "hold": 0.12
     },
     "title": {
-      "y": 0.12, "size": 64, "bold": true, "uppercase": false, "capitalize": true,
-      "color": "#FFFFFF", "outline_color": "#000000", "outline": 5, "shadow": 0
+      "y": 0.2,
+      "size": 64,
+      "bold": true,
+      "uppercase": false,
+      "capitalize": true,
+      "color": "#000000",
+      "outline_color": "#000000",
+      "outline": 5,
+      "shadow": 0,
+      "box_color": "#FFFFFF",
+      "box_padding": 18
     },
     "cta": {
-      "y": 0.50, "size": 58, "bold": true, "uppercase": false, "capitalize": true,
-      "color": "#FFFFFF", "outline_color": "#000000", "outline": 5, "shadow": 0,
-      "box_color": "#123c69", "box_padding": 18
+      "y": 0.78,
+      "size": 58,
+      "bold": true,
+      "uppercase": false,
+      "capitalize": true,
+      "color": "#FFFFFF",
+      "outline_color": "#000000",
+      "outline": 5,
+      "shadow": 0,
+      "box_color": "#123c69",
+      "box_padding": 18
     }
   }
 }

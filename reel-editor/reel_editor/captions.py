@@ -133,6 +133,6 @@ def write_ass(events, cfg, path):
         width = s.get("max_chars_per_line", 22)
         y = int(H * s["y"])
         lines.append(f"Dialogue: 0,{_t(e['start'])},{_t(e['end'])},{names[e['kind']]},,0,0,0,,"
-                     f"{{\\an5\\pos({W // 2},{y})}}{_esc(_wrap(text, width))}")
+                     f"{{\\an5\\pos({W // 2},{y})}}{_wrap(_esc(text), width)}")
     with open(path, "w", encoding="utf-8") as f:
         f.write("\n".join(lines) + "\n")
