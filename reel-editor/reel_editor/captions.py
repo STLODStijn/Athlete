@@ -117,9 +117,14 @@ def write_ass(events, cfg, path):
              "Alignment,MarginL,MarginR,MarginV,Encoding"]
     for kind, name in names.items():
         s = st[kind]
+        if s.get("box_color"):  # effen balk achter de tekst (BorderStyle 3): outline-kleur wordt balkkleur
+            s = dict(s, outline_color=s["box_color"], outline=s.get("box_padding", 16))
+            bstyle = 3
+        else:
+            bstyle = 1
         lines.append(
             f"Style: {name},{st['font']},{s['size']},{_ass_color(s['color'])},&H000000FF,"
-            f"{_ass_color(s['outline_color'])},&H00000000,{-1 if s['bold'] else 0},0,0,0,100,100,0,0,1,"
+            f"{_ass_color(s['outline_color'])},&H00000000,{-1 if s['bold'] else 0},0,0,0,100,100,0,0,{bstyle},"
             f"{s['outline']},{s['shadow']},5,60,60,0,1")
     lines += ["", "[Events]", "Format: Layer,Start,End,Style,Name,MarginL,MarginR,MarginV,Effect,Text"]
     for e in sorted(events, key=lambda e: e["start"]):

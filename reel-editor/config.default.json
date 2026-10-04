@@ -56,7 +56,8 @@
     },
     "cta": {
       "y": 0.50, "size": 58, "bold": true, "uppercase": false, "capitalize": true,
-      "color": "#FFFFFF", "outline_color": "#000000", "outline": 5, "shadow": 0
+      "color": "#FFFFFF", "outline_color": "#000000", "outline": 5, "shadow": 0,
+      "box_color": "#123c69", "box_padding": 18
     }
   }
 }
