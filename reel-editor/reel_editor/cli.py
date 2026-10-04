@@ -13,8 +13,19 @@ def job_paths(name):
     return d
 
 
+GLOBAL_SPELLING = ROOT / "spelling.json"
+
+
+def global_spelling():
+    if not GLOBAL_SPELLING.exists():
+        return {}
+    return {k: v for k, v in load_json(GLOBAL_SPELLING).items() if not k.startswith("_")}
+
+
 def load_cfg(d):
-    return deep_merge(load_json(ROOT / "config.default.json"), load_json(d / "config.json"))
+    """Voorrang: config.default.json < spelling.json (alle reels) < jobs/<naam>/config.json."""
+    cfg = deep_merge(load_json(ROOT / "config.default.json"), {"spelling": global_spelling()})
+    return deep_merge(cfg, load_json(d / "config.json"))
 
 
 def timing(d, key, seconds):
@@ -69,9 +80,15 @@ def cmd_review(a):
 
 def cmd_fix(a):
     d = job_paths(a.job)
-    c = load_json(d / "config.json")
-    c.setdefault("spelling", {})[a.wrong] = a.right
-    save_json(d / "config.json", c)
+    if a.glob:
+        g = load_json(GLOBAL_SPELLING) if GLOBAL_SPELLING.exists() else {}
+        g[a.wrong] = a.right
+        save_json(GLOBAL_SPELLING, g)
+        print(f"Voor alle reels opgeslagen in spelling.json: '{a.wrong}' -> '{a.right}'")
+    else:
+        c = load_json(d / "config.json")
+        c.setdefault("spelling", {})[a.wrong] = a.right
+        save_json(d / "config.json", c)
     cmd_plan(argparse.Namespace(job=a.job))
 
 
@@ -194,7 +211,8 @@ def cmd_go(a):
         if ans == "f":
             w, r = ask("Fout geschreven als: "), ask("Moet zijn: ")
             if w and r:
-                cmd_fix(argparse.Namespace(job=name, wrong=w, right=r))
+                allr = ask("Voor alle toekomstige reels onthouden? [J/n]: ").lower() != "n"
+                cmd_fix(argparse.Namespace(job=name, wrong=w, right=r, glob=allr))
         elif ans == "t":
             setcfg(title=ask("Titel (leeg = geen): "))
         elif ans == "c":
@@ -222,7 +240,8 @@ def main():
     x.set_defaults(f=cmd_transcribe)
     for n, f in (("plan", cmd_plan), ("review", cmd_review), ("approve", cmd_approve)):
         x = s.add_parser(n); x.add_argument("job"); x.set_defaults(f=f)
-    x = s.add_parser("fix"); x.add_argument("job"); x.add_argument("wrong"); x.add_argument("right"); x.set_defaults(f=cmd_fix)
+    x = s.add_parser("fix"); x.add_argument("job"); x.add_argument("wrong"); x.add_argument("right")
+    x.add_argument("--global", dest="glob", action="store_true", help="onthoud voor alle reels (spelling.json)"); x.set_defaults(f=cmd_fix)
     x = s.add_parser("render"); x.add_argument("job"); x.add_argument("--yes", action="store_true",
         help="sla goedkeuring over (alleen voor tests)"); x.set_defaults(f=cmd_render)
     x = s.add_parser("verify"); x.add_argument("job"); x.add_argument("--deep", action="store_true",
