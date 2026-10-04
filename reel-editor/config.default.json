@@ -56,8 +56,7 @@
       "outline_color": "#000000",
       "outline": 4,
       "shadow": 0,
-      "max_chars_per_line": 22,
-      "max_chars_per_caption": 70,
+      "max_chars_per_caption": null,
       "hold": 0.12,
       "font": "Maven Pro Medium"
     },

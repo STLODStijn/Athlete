@@ -48,6 +48,16 @@ def verify(job_dir, out_path, info, cfg, deep=False, whisper_fn=None):
         add("PASS" if multi == 0 else "WARN", "1 woord tegelijk",
             f"{multi} captions met >1 woord (samengestelde termen uit spellinglijst tellen mee)")
 
+    if caps:
+        ass = (job_dir / "captions.ass").read_text(encoding="utf-8")
+        multi = [l for l in ass.splitlines() if l.startswith("Dialogue") and ",Caption," in l and "\\N" in l]
+        from .captions import caption_limit
+        lim = caption_limit(cfg)
+        too_long = [e["text"] for e in caps if len(e["text"]) > lim] if cfg["caption_mode"] == "sentence" else []
+        add("PASS" if not multi and not too_long else "FAIL" if multi else "WARN", "captions op 1 regel",
+            f"{len(multi)} met regelbreuk" + (f"; {len(too_long)} langer dan {lim} tekens (kan buiten beeld lopen): "
+                                              f"{too_long[0][:40]}..." if too_long else ""))
+
     # captions tegen audio: staat er een caption terwijl het stil is?
     if caps:
         sil = [(s, e if e is not None else dur) for s, e in silence_intervals(out_path, cfg["silence"]["noise_db"], 0.3)]

@@ -1,5 +1,5 @@
 """Captions, titel en CTA als ASS-ondertitels (libass in ffmpeg). Stijl komt volledig uit config."""
-import math, textwrap
+import textwrap
 
 
 def _ass_color(hexcol):
@@ -22,25 +22,47 @@ def _wrap(text, width):
     return "\\N".join(textwrap.wrap(text, width=width, break_long_words=False) or [""])
 
 
-def _split_even(words, max_chars):
-    """Splits één zin in gelijke delen als hij te lang is. Voegt nooit twee zinnen samen."""
-    total = sum(len(w["text"]) + 1 for w in words)
-    k = max(1, math.ceil(total / max_chars))
-    if k == 1:
-        return [words]
-    target, parts, cur, cur_len = total / k, [], [], 0
-    for w in words:
-        cur.append(w)
-        cur_len += len(w["text"]) + 1
-        if cur_len >= target and len(parts) < k - 1:
-            parts.append(cur)
-            cur, cur_len = [], 0
-    if cur:
-        parts.append(cur)
-    return parts
+def _split_fit(words, limit):
+    """Splits één zin in zo weinig mogelijk stukken van max `limit` tekens, liefst na een komma
+    en met gelijkmatige lengtes. Voegt nooit twee zinnen samen."""
+    n = len(words)
+    lens = [len(w["text"]) for w in words]
+
+    def chunk_len(i, j):
+        return sum(lens[i:j]) + (j - i - 1)
+
+    best = [None] * (n + 1)  # best[j] = (aantal_stukken, straf, vorige_grens)
+    best[0] = (0, 0.0, None)
+    for j in range(1, n + 1):
+        for i in range(j):
+            if best[i] is None:
+                continue
+            ln = chunk_len(i, j)
+            if ln > limit and j - i > 1:
+                continue  # te lang, tenzij het één woord is dat al niet past
+            pen = (limit - ln) ** 2 if ln <= limit else 0
+            if j < n and words[j - 1]["text"].endswith((",", ";", ":", "–")):
+                pen -= 60
+            cand = (best[i][0] + 1, best[i][1] + pen, i)
+            if best[j] is None or cand[:2] < best[j][:2]:
+                best[j] = cand
+    parts, j = [], n
+    while j > 0:
+        i = best[j][2]
+        parts.append(words[i:j])
+        j = i
+    return parts[::-1]
 
 
-def sentence_events(words, style, total):
+def caption_limit(cfg):
+    """Max. tekens per caption zodat hij op één regel past. Automatisch uit lettergrootte en breedte."""
+    st = cfg["style"]["caption"]
+    if st.get("max_chars_per_caption"):
+        return st["max_chars_per_caption"]
+    return max(10, int((cfg["output"]["width"] - 160) / (st["size"] * 0.55)))
+
+
+def sentence_events(words, style, total, limit):
     sentences, cur = [], []
     for w in words:
         cur.append(w)
@@ -51,7 +73,7 @@ def sentence_events(words, style, total):
         sentences.append(cur)
     groups = []
     for s in sentences:
-        groups += _split_even(s, style["max_chars_per_caption"])
+        groups += _split_fit(s, limit)
     return _finish(groups, style, total, lambda g: " ".join(w["text"] for w in g))
 
 
@@ -91,7 +113,7 @@ def build_events(words, cfg, total):
         words = capitalize_sentences(words)
     events = []
     if mode == "sentence":
-        events += [dict(e, kind="caption") for e in sentence_events(words, st["caption"], total)]
+        events += [dict(e, kind="caption") for e in sentence_events(words, st["caption"], total, caption_limit(cfg))]
     elif mode == "word":
         events += [dict(e, kind="caption") for e in word_events(words, st["caption"], total)]
     elif mode != "none":
@@ -130,7 +152,7 @@ def write_ass(events, cfg, path):
     for e in sorted(events, key=lambda e: e["start"]):
         s = st[e["kind"]]
         text = e["text"].upper() if s.get("uppercase") else e["text"]
-        width = s.get("max_chars_per_line", 22)
+        width = 10 ** 6 if e["kind"] == "caption" else s.get("max_chars_per_line", 22)  # captions: altijd 1 regel
         y = int(H * s["y"])
         lines.append(f"Dialogue: 0,{_t(e['start'])},{_t(e['end'])},{names[e['kind']]},,0,0,0,,"
                      f"{{\\an5\\pos({W // 2},{y})}}{_wrap(_esc(text), width)}")
